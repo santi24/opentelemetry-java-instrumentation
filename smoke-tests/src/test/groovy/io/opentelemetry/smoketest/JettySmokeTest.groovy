@@ -16,7 +16,7 @@ package io.opentelemetry.smoketest
 class JettySmokeTest extends AppServerTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:jetty-${serverVersion}-jdk$jdk-20210223.592806654"
+    "ghcr.io/open-telemetry/java-test-containers:jetty-${serverVersion}-jdk$jdk-202102"
   }
 
   def getJettySpanName() {

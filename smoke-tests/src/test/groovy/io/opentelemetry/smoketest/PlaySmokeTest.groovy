@@ -11,7 +11,7 @@ import okhttp3.Request
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-play-jdk$jdk-20201128.1734635"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-play-jdk$jdk-202102"
   }
 
   def "play smoke test on JDK #jdk"(int jdk) {

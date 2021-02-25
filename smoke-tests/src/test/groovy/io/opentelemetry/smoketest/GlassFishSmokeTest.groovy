@@ -17,7 +17,7 @@ import org.testcontainers.containers.wait.strategy.WaitStrategy
 class GlassFishSmokeTest extends AppServerTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:payara-${serverVersion}-jdk$jdk-20210223.592806654"
+    "ghcr.io/open-telemetry/java-test-containers:payara-${serverVersion}-jdk$jdk-202102"
   }
 
   @Override

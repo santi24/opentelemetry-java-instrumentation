@@ -18,7 +18,7 @@ import org.testcontainers.containers.wait.strategy.WaitStrategy
 class TomeeSmokeTest extends AppServerTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:tomee-${serverVersion}-jdk$jdk-20210223.592806654"
+    "ghcr.io/open-telemetry/java-test-containers:tomee-${serverVersion}-jdk$jdk-202102"
   }
 
   @Override
