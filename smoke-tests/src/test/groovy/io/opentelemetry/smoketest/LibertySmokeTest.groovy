@@ -33,6 +33,7 @@ class LibertySmokeTest extends AppServerTest {
       case "/app/headers":
       case "/app/exception":
       case "/app/asyncgreeting":
+      case "/app/person":
         return path
     }
     return 'HTTP GET'

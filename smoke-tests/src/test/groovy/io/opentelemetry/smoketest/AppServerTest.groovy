@@ -5,12 +5,8 @@
 
 package io.opentelemetry.smoketest
 
-import okhttp3.FormBody
-import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import okio.BufferedSink
-import org.jetbrains.annotations.NotNull
 
 import static org.junit.Assume.assumeTrue
 
@@ -66,7 +62,7 @@ abstract class AppServerTest extends SmokeTest {
       .setType(MultipartBody.FORM)
       .addFormDataPart("name", "John Doe")
       .addFormDataPart("age", "40")
-      .build();
+      .build()
 
     def request = new Request.Builder().url(url).post(requestBody).build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
