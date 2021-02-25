@@ -35,6 +35,10 @@
     <servlet-name>Jsp</servlet-name>
     <servlet-class>io.opentelemetry.smoketest.matrix.JspServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>Person</servlet-name>
+    <servlet-class>io.opentelemetry.smoketest.matrix.PersonServlet</servlet-class>
+  </servlet>
   <servlet-mapping>
     <servlet-name>Headers</servlet-name>
     <url-pattern>/headers</url-pattern>
@@ -62,5 +66,9 @@
   <servlet-mapping>
     <servlet-name>Jsp</servlet-name>
     <url-pattern>/jsp</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>Person</servlet-name>
+    <url-pattern>/person</url-pattern>
   </servlet-mapping>
 </web-app>
