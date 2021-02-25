@@ -81,7 +81,7 @@ abstract class SmokeTest extends Specification {
       .withEnv("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1")
       .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
       .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://collector:55680")
-      .withImagePullPolicy(PullPolicy.alwaysPull())
+      .withImagePullPolicy(PullPolicy.defaultPolicy())
       .withEnv(extraEnv)
     customizeContainer(target)
 

@@ -62,9 +62,9 @@ abstract class AppServerTest extends SmokeTest {
       .add("name", "John")
       .add("age", "40")
       .add("gender", "M")
-      .build();
+      .build()
 
-    def request = new Request.Builder().url(url).post(formBody).build();
+    def request = new Request.Builder().url(url).post(formBody).build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
