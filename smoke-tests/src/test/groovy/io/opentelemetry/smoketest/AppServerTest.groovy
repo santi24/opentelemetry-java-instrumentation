@@ -5,6 +5,9 @@
 
 package io.opentelemetry.smoketest
 
+import okhttp3.FormBody
+import okhttp3.RequestBody
+
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.proto.trace.v1.Span
@@ -47,6 +50,64 @@ abstract class AppServerTest extends SmokeTest {
 
   boolean testRequestWebInfWebXml() {
     true
+  }
+
+  //TODO add assert that spans are created by POST request
+  @Unroll
+  def "#appServer smoke test with POST request on JDK #jdk"(String appServer, String jdk) {
+    assumeTrue(testSmoke())
+
+    String url = "http://localhost:${target.getMappedPort(8080)}/app/person"
+    RequestBody formBody = new FormBody.Builder()
+      .add("name", "John")
+      .add("age", "40")
+      .add("gender", "M")
+      .build();
+
+    def request = new Request.Builder().url(url).post(formBody).build();
+    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
+    when:
+    def response = CLIENT.newCall(request).execute()
+    TraceInspector traces = new TraceInspector(waitForTraces())
+    Set<String> traceIds = traces.traceIds
+    String responseBody = response.body().string()
+
+    then: "There is one trace"
+    traceIds.size() == 1
+
+    and: "Response contains name, age, gender"
+    responseBody.contains("name") && responseBody.contains("age") && responseBody.contains("gender")
+
+    and: "trace id is present in the HTTP headers as reported by the called endpoint"
+    responseBody.contains(traceIds.find())
+
+    and: "Server spans in the distributed trace"
+    traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 2
+
+    and: "Expected span names"
+    traces.countSpansByName(getSpanName('/app/person')) == 1
+
+    and: "The span for the initial web request"
+    traces.countFilteredAttributes("http.url", url) == 1
+
+    and: "Number of spans with http protocol version"
+    traces.countFilteredAttributes("http.flavor", "1.1") == 1
+
+    and: "Number of spans tagged with current otel library version"
+    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
+
+    and:
+    traces.findResourceAttribute("os.type")
+      .map { it.stringValue }
+      .findAny()
+      .isPresent()
+
+    cleanup:
+    response?.close()
+
+    where:
+    [appServer, jdk] << getTestParams()
   }
 
   //TODO add assert that server spans were created by servers, not by servlets
