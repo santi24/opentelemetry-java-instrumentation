@@ -69,7 +69,7 @@ public class TraceInspector {
   }
 
   protected int countSpansByName(String spanName) {
-    return (int) getSpanStream().filter(it -> it.getName().equals(spanName)).count();
+    return (int) getSpanStream().filter(it -> it.getName().equalsIgnoreCase(spanName)).count();
   }
 
   protected int countSpansByKind(Span.SpanKind spanKind) {

@@ -11,8 +11,6 @@ import okhttp3.RequestBody
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.proto.trace.v1.Span
-import java.util.jar.Attributes
-import java.util.jar.JarFile
 import okhttp3.Request
 import org.junit.runner.RunWith
 import spock.lang.Shared
@@ -65,7 +63,6 @@ abstract class AppServerTest extends SmokeTest {
       .build()
 
     def request = new Request.Builder().url(url).post(requestBody).build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -76,7 +73,7 @@ abstract class AppServerTest extends SmokeTest {
     then: "There is one trace"
     traceIds.size() == 1
 
-    and: "Response contains name, age, gender"
+    and: "Response contains name, age"
     responseBody.contains("name") && responseBody.contains("age")
 
     and: "Server spans in the distributed trace"
@@ -87,15 +84,6 @@ abstract class AppServerTest extends SmokeTest {
 
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
-
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
 
     cleanup:
     response?.close()
@@ -111,7 +99,6 @@ abstract class AppServerTest extends SmokeTest {
 
     String url = "http://localhost:${target.getMappedPort(8080)}/app/greeting"
     def request = new Request.Builder().url(url).get().build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -139,16 +126,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.url", "http://localhost:8080/app/headers") == 2
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 3
-
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
+    traces.countFilteredAttributes("http.flavor", "1.1") == 1
 
     cleanup:
     response?.close()
@@ -161,7 +139,6 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer test static file found on JDK #jdk"(String appServer, String jdk) {
     String url = "http://localhost:${target.getMappedPort(8080)}/app/hello.txt"
     def request = new Request.Builder().url(url).get().build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -184,15 +161,6 @@ abstract class AppServerTest extends SmokeTest {
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
 
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
-
     cleanup:
     response?.close()
 
@@ -204,7 +172,6 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer test static file not found on JDK #jdk"(String appServer, String jdk) {
     String url = "http://localhost:${target.getMappedPort(8080)}/app/file-that-does-not-exist"
     def request = new Request.Builder().url(url).get().build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -226,15 +193,6 @@ abstract class AppServerTest extends SmokeTest {
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
 
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
-
     cleanup:
     response?.close()
 
@@ -248,7 +206,6 @@ abstract class AppServerTest extends SmokeTest {
 
     String url = "http://localhost:${target.getMappedPort(8080)}/app/WEB-INF/web.xml"
     def request = new Request.Builder().url(url).get().build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -271,16 +228,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.url", url) == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 1
-
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
+    traces.countFilteredAttributes("http.flavor", "HTTP/1.1") == 1
 
     cleanup:
     response?.close()
@@ -295,7 +243,6 @@ abstract class AppServerTest extends SmokeTest {
 
     String url = "http://localhost:${target.getMappedPort(8080)}/app/exception"
     def request = new Request.Builder().url(url).get().build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -314,20 +261,8 @@ abstract class AppServerTest extends SmokeTest {
     and: "Expected span names"
     traces.countSpansByName(getSpanName('/app/exception')) == 1
 
-    and: "There is one exception"
-    traces.countFilteredEventAttributes('exception.message', 'This is expected') == 1
-
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
-
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
 
     cleanup:
     response?.close()
@@ -340,7 +275,6 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer test request outside deployed application JDK #jdk"(String appServer, String jdk) {
     String url = "http://localhost:${target.getMappedPort(8080)}/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless"
     def request = new Request.Builder().url(url).get().build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -363,16 +297,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.url", url) == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 1
-
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
+    traces.countFilteredAttributes("http.flavor", "HTTP/1.1") == 1
 
     cleanup:
     response?.close()
@@ -387,7 +312,6 @@ abstract class AppServerTest extends SmokeTest {
 
     String url = "http://localhost:${target.getMappedPort(8080)}/app/asyncgreeting"
     def request = new Request.Builder().url(url).get().build()
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -415,16 +339,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.url", "http://localhost:8080/app/headers") == 2
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("http.flavor", "1.1") == 3
-
-    and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
-
-    and:
-    traces.findResourceAttribute("os.type")
-      .map { it.stringValue }
-      .findAny()
-      .isPresent()
+    traces.countFilteredAttributes("http.flavor", "1.1") == 1
 
     cleanup:
     response?.close()
